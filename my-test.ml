@@ -1,0 +1,1 @@
+if fisneg (read_float ()) then print_int 10 else print_int 39
