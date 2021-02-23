@@ -23,8 +23,8 @@ SOURCES = float.c type.ml id.ml m.ml s.ml \
 syntax.ml parser.mly lexer.mll typing.mli typing.ml kNormal.mli kNormal.ml \
 alpha.mli alpha.ml commondelete.mli commondelete.ml beta.mli beta.ml assoc.mli assoc.ml \
 inline.mli inline.ml constFold.mli constFold.ml global.mli global.ml elim.mli elim.ml \
-closure.mli closure.ml asm.mli asm.ml virtual.mli virtual.ml \
-simm.mli simm.ml constFold2.mli constFold2.ml elim2.mli elim2.ml regAlloc.mli regAlloc.ml emit.mli emit.ml \
+closure.mli closure.ml closuretypecheck.mli closuretypecheck.ml asm.mli asm.ml virtual.mli virtual.ml \
+simm.mli simm.ml constFold2.mli constFold2.ml elim2.mli elim2.ml graph.mli graph.ml regAlloc.mli regAlloc.ml delete_load.mli delete_load.ml emit.mli emit.ml \
 main.mli debug.mli debug.ml main.ml
 
 # ���ƥ��ȥץ�����ब�������顢��������䤹

@@ -30,6 +30,8 @@ let rec g env = function (* ������߹��ߥ롼�������
   | FDiv(x, y) when memf x env && memf y env -> Float(findf x env /. findf y env)
   | IfEq(x, y, e1, e2) when memi x env && memi y env -> if findi x env = findi y env then g env e1 else g env e2
   | IfEq(x, y, e1, e2) when memf x env && memf y env -> if findf x env = findf y env then g env e1 else g env e2
+  | IfEq(x, y, e1, e2) when memi x env -> IfEq(x, y, g (M.add y (Int(findi x env)) env) e1, g env e2)
+  | IfEq(x, y, e1, e2) when memi y env -> IfEq(x, y, g (M.add x (Int(findi y env)) env) e1, g env e2)
   | IfEq(x, y, e1, e2) -> IfEq(x, y, g env e1, g env e2)
   | IfLE(x, y, e1, e2) when memi x env && memi y env -> if findi x env <= findi y env then g env e1 else g env e2
   | IfLE(x, y, e1, e2) when memf x env && memf y env -> if findf x env <= findf y env then g env e1 else g env e2

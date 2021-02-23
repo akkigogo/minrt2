@@ -1,3 +1,3 @@
 ./min-caml minrt
 echo minrt | ./foo
-cat contest.sld | ./simulater
+echo ./contest.sld 0 0 1 contest.sld | ./simulator_7

@@ -1,1 +1,2 @@
-if fisneg (read_float ()) then print_int 10 else print_int 39
+
+print_float (1.3)

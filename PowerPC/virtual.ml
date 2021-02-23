@@ -7,7 +7,8 @@ let data = ref [] (* 浮動小数点の定数テーブル (caml2html: virtual_da
 let global_lis = ref []
 let globals : (Type.t * int) M.t ref = ref M.empty
 
-let dp = ref 20000
+let dp = ref 100
+let float_data = ref 0
 
 let classify xts ini addf addi =
   List.fold_left
@@ -32,9 +33,9 @@ let expand xts ini addf addi =
     ini
     (fun (offset, acc) x ->
       let offset = align offset in
-      (offset + 4, addf x offset acc))
+      (offset + 1, addf x offset acc))
     (fun (offset, acc) x t ->
-      (offset + 4, addi x t offset acc))
+      (offset + 1, addi x t offset acc))
 
 let rec g env = function (* 式の仮想マシンコード生成 (caml2html: virtual_g) *)
   | Closure.Unit -> Ans(Nop)
@@ -50,6 +51,15 @@ let rec g env = function (* 式の仮想マシンコード生成 (caml2html: vir
           data := (l, d) :: !data;
           l in
       Ans(FLi(l)) *)
+      (* Ans(FLi(d)) *)
+      (
+      try
+        let _ = List.assoc d !data in ()
+      with _ -> 
+        data := (d, !float_data)::!data;
+        (* print_float d; *)
+        float_data := !float_data + 1;
+      );
       Ans(FLi(d))
   | Closure.Neg(x) -> Ans(Neg(x))
   | Closure.Add(x, y) -> Ans(Add(x, V(y)))
@@ -57,18 +67,18 @@ let rec g env = function (* 式の仮想マシンコード生成 (caml2html: vir
   | Closure.Mult(x, y) -> Ans(Slw(x, C(2)))
   | Closure.Div(x, y) -> Ans(Slr(x, C(1)))
   | Closure.FNeg(x) -> Ans(FNeg(x))
-  | Closure.FAdd(x, y) -> Ans(FAdd(x, y))
-  | Closure.FSub(x, y) -> Ans(FSub(x, y))
-  | Closure.FMul(x, y) -> Ans(FMul(x, y))
-  | Closure.FDiv(x, y) -> Ans(FDiv(x, y))
+  | Closure.FAdd(x, y) -> Ans(FAdd(x, Vf(y)))
+  | Closure.FSub(x, y) -> Ans(FSub(x, Vf(y)))
+  | Closure.FMul(x, y) -> Ans(FMul(x, Vf(y)))
+  | Closure.FDiv(x, y) -> Ans(FDiv(x, Vf(y)))
   | Closure.IfEq(x, y, e1, e2) ->
       (match M.find x env with
-      | Type.Bool | Type.Int -> Ans(IfEq(x, V(y), g env e1, g env e2))
+      | Type.Int -> Ans(IfEq(x, V(y), g env e1, g env e2))
       | Type.Float -> Ans(IfFEq(x, y, g env e1, g env e2))
       | _ -> failwith "equality supported only for bool, int, and float")
   | Closure.IfLT(x, y, e1, e2) ->
       (match M.find x env with
-      | Type.Bool | Type.Int -> Ans(IfLT(x, V(y), g env e1, g env e2))
+      | Type.Int -> Ans(IfLT(x, V(y), g env e1, g env e2))
       | Type.Float -> Ans(IfFLT(x, y, g env e1, g env e2))      (* x <= y then e1 else e2 ---> if x > y then e2 else e1 ---> if y < x then e2 else e1  *)
       | _ -> failwith "inequality supported only for bool, int, and float")
   | Closure.Let((x, t1), e1, e2) when List.mem x !global_lis ->
@@ -90,7 +100,7 @@ let rec g env = function (* 式の仮想マシンコード生成 (caml2html: vir
       | Type.Unit -> Ans(Nop)
       | Type.Float -> Ans(FMr(x))
       | _ -> Ans(Mr(x)))
-  | Closure.MakeCls((x, t), { Closure.entry = l; Closure.actual_fv = ys }, e2) -> (* クロージャの生成 (caml2html: virtual_makecls) *)
+  (* | Closure.MakeCls((x, t), { Closure.entry = l; Closure.actual_fv = ys }, e2) -> (* クロージャの生成 (caml2html: virtual_makecls) *)
       (* Closureのアドレスをセットしてから、自由変数の値をストア *)
       let e2' = g (M.add x t env) e2 in
       let offset, store_fv =
@@ -107,7 +117,7 @@ let rec g env = function (* 式の仮想マシンコード生成 (caml2html: vir
                       store_fv))))
   | Closure.AppCls(x, ys) ->
       let (int, float) = separate (List.map (fun y -> (y, M.find y env)) ys) in
-      Ans(CallCls(x, int, float))
+      Ans(CallCls(x, int, float)) *)
   | Closure.AppDir(Id.L(x), ys) ->
       let (int, float) = separate (List.map (fun y -> (y, M.find y env)) ys) in
       Ans(CallDir(Id.L(x), int, float))
@@ -152,40 +162,44 @@ let rec g env = function (* 式の仮想マシンコード生成 (caml2html: vir
     (match M.find y env with
     | Type.Unit -> Ans(Nop)
     | Type.Float ->
-      dp := !dp + 4 * i;
+      (* dp := !dp + 4 * i; *)
+      dp := !dp + i;
       let rec store j =
         if j = 0 then Ans(Li(addr)) else
-        seq(Stfd(y, z, C(4 * (j - 1))), store (j - 1)) in
+        (* seq(Stfd(y, z, C(4 * (j - 1))), store (j - 1)) in *)
+        seq(Stfd(y, z, C( (j - 1))), store (j - 1)) in
       Let((z, Type.Array(Type.Float)), Li(addr),
         store i)
     | t ->
-      dp := !dp + 4 * i;
+      (* dp := !dp + 4 * i; *)
+      dp := !dp + i;
       let rec store j =
         if j = 0 then Ans(Li(addr)) else
-        seq(Stw(y, z, C(4 * (j - 1))), store (j - 1)) in
+        (* seq(Stw(y, z, C(4 * (j - 1))), store (j - 1)) in *)
+        seq(Stw(y, z, C( (j - 1))), store (j - 1)) in
       Let((z, Type.Array(t)), Li(addr),
         store i))
   | Closure.Get(x, y) -> (* ������ɤ߽Ф� (caml2html: virtual_get) *)
-      let offset = Id.genid "o" in
+      (* let offset = Id.genid "o" in *)
       (match M.find x env with
       | Type.Array(Type.Unit) -> Ans(Nop)
       | Type.Array(Type.Float) ->
-          Let((offset, Type.Int), Slw(y, C(2)),
-              Ans(Lfd(x, V(offset))))
+          (* Let((offset, Type.Int), Slw(y, C(2)), *)
+              Ans(Lfd(x, V(y)))
       | Type.Array(_) ->
-          Let((offset, Type.Int), Slw(y, C(2)),
-              Ans(Lwz(x, V(offset))))
+          (* Let((offset, Type.Int), Slw(y, C(2)), *)
+              Ans(Lwz(x, V(y)))
       | _ -> assert false)
   | Closure.Put(x, y, z) ->
-      let offset = Id.genid "o" in
+      (* let offset = Id.genid "o" in *)
       (match M.find x env with
       | Type.Array(Type.Unit) -> Ans(Nop)
       | Type.Array(Type.Float) ->
-          Let((offset, Type.Int), Slw(y, C(2)),
-              Ans(Stfd(z, x, V(offset))))
+          (* Let((offset, Type.Int), Slw(y, C(2)), *)
+              Ans(Stfd(z, x, V(y)))
       | Type.Array(_) ->
-          Let((offset, Type.Int), Slw(y, C(2)),
-              Ans(Stw(z, x, V(offset))))
+          (* Let((offset, Type.Int), Slw(y, C(2)), *)
+              Ans(Stw(z, x, V(y)))
       | _ -> assert false)
   | Closure.ExtArray(Id.L(x)) -> Ans(SetL(Id.L("min_caml_" ^ x)))
 
@@ -196,7 +210,7 @@ let h { Closure.name = (Id.L(x), t); Closure.args = yts; Closure.formal_fv = zts
   let (offset, load) =
     expand
       zts
-      (4, g (M.add x t (M.add_list yts (M.add_list zts (M.map fst !globals)))) e)
+      (1, g (M.add x t (M.add_list yts (M.add_list zts (M.map fst !globals)))) e)
       (fun z offset load -> fletd(z, Lfd(x, C(offset)), load))
       (fun z t offset load -> Let((z, t), Lwz(x, C(offset)), load)) in
   match t with

@@ -190,3 +190,7 @@ let rec out_closure_fundef_lis oc = function
 
 let out_closure oc  = function
   | Prog (fl, e, _) -> out_closure_fundef_lis oc fl; Printf.fprintf oc ("\n"); out_closure1 oc e
+
+(* 
+let rec out_asm oc = function
+  Prog (_, fl, e, _) -> out_asm_fundef_lis oc fl; print_string ("\n"); oct_asm oc e *)

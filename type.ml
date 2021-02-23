@@ -1,6 +1,6 @@
 type t = (* MinCaml�η���ɽ������ǡ����� (caml2html: type_t) *)
   | Unit
-  | Bool
+  (* | Bool *)
   | Int
   | Float
   | Fun of t list * t (* arguments are uncurried *)
@@ -10,7 +10,7 @@ type t = (* MinCaml�η���ɽ������ǡ����� (caml2htm
 
   let rec str = function
   | Unit -> "()"
-  | Bool -> "Bool"
+  (* | Bool -> "Bool" *)
   | Int -> "Int"
   | Float -> "Float"
   | Fun(args, body) ->
@@ -18,7 +18,7 @@ type t = (* MinCaml�η���ɽ������ǡ����� (caml2htm
     (List.fold_left (fun cur_s arg -> cur_s ^ ", " ^ (str arg)) "" args) ^
     ") -> " ^ (str body)
   | Tuple li -> "(" ^ (List.fold_left (fun cur_s arg -> cur_s ^ ", " ^ (str arg)) "" li) ^ ")"
-  | Array arr -> Printf.sprintf "[%s]" (str arr)
+  | Array arr -> Printf.sprintf "Array[%s]" (str arr)
   | Var v -> (
       match !v with
       | Some v -> Printf.sprintf "Var(%s)" (str v)

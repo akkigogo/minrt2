@@ -33,6 +33,7 @@ and g' env = function (* ��̿���16bit¨�ͺ�Ŭ�� (caml2html: si
   | Stfd(x, y, V(z)) when M.mem z env -> Stfd(x, y, C(M.find z env))
   | IfEq(x, V(y), e1, e2) when M.mem y env -> IfEq(x, C(M.find y env), g env e1, g env e2)
   | IfLT(x, V(y), e1, e2) when M.mem y env -> IfLT(x, C(M.find y env), g env e1, g env e2)
+  (* | IfLT(x, V(y), e1, e2) when M.mem x env -> IfLT2(M.find x env, y, g env e1, g env e2) *)
   (* | IfGE(x, V(y), e1, e2) when M.mem y env -> IfGE(x, C(M.find y env), g env e1, g env e2) *)
   | IfEq(x, V(y), e1, e2) when M.mem x env -> IfEq(y, C(M.find x env), g env e1, g env e2)
   (* | IfLT(x, V(y), e1, e2) when M.mem x env -> IfLT(y, C(M.find x env), g env e1, g env e2) *)

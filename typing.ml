@@ -62,7 +62,7 @@ let rec occur r1 = function (* occur check (caml2html: typing_occur) *)
 
 let rec unify t1 t2 = (* 型が合うように、型変数へ代入する (caml2html: typing_unify) *)
   match t1, t2 with
-  | Type.Unit, Type.Unit | Type.Bool, Type.Bool | Type.Int, Type.Int | Type.Float, Type.Float -> ()
+  | Type.Unit, Type.Unit | Type.Int, Type.Int | Type.Float, Type.Float -> ()
   | Type.Fun(t1s, t1'), Type.Fun(t2s, t2') ->
       (try List.iter2 unify t1s t2s
       with Invalid_argument(_) -> raise (Unify(t1, t2)));
@@ -86,12 +86,12 @@ let rec g env e = (* 型推論(caml2html: typing_g) *)
   try
     match e with
     | Unit -> Type.Unit
-    | Bool(_) -> Type.Bool
+    | Bool(_) -> Type.Int
     | Int(_) -> Type.Int
     | Float(_) -> Type.Float
     | Not(e) ->
-        unify Type.Bool (g env e);
-        Type.Bool
+        unify Type.Int (g env e);
+        Type.Int
     | Neg(e) ->
         unify Type.Int (g env e);
         Type.Int
@@ -108,9 +108,9 @@ let rec g env e = (* 型推論(caml2html: typing_g) *)
         Type.Float
     | Eq(e1, e2) | LE(e1, e2) ->
         unify (g env e1) (g env e2);
-        Type.Bool
+        Type.Int
     | If(e1, e2, e3) ->
-        unify (g env e1) Type.Bool;
+        unify (g env e1) Type.Int;
         let t2 = g env e2 in
         let t3 = g env e3 in
         unify t2 t3;
@@ -131,15 +131,16 @@ let rec g env e = (* 型推論(caml2html: typing_g) *)
         g env e2
     | App(e, es) -> (* 関数適用の型推論 (caml2html: typing_app) *)
         let t = 
-          (  if e = Var ("cos") then Type.Float else
+          ( 
+               (* if e = Var ("cos") then Type.Float else
             if e = Var ("sin") then Type.Float else
-            if e = Var ("atan") then Type.Float else
+            if e = Var ("atan") then Type.Float else *)
             if e = Var ("read_float") then Type.Float else
             if e = Var ("sqrt") then Type.Float else
-            if e = Var ("fsqr") then Type.Float else
+            (* if e = Var ("fsqr") then Type.Float else *)
             if e = Var ("floor") then Type.Float else
-            if e = Var ("fhalf") then Type.Float else
-            if e = Var ("truncate") then Type.Float else
+            (* if e = Var ("fhalf") then Type.Float else *)
+            (* if e = Var ("truncate") then Type.Float else *)
             if e = Var ("float_of_int") then Type.Float else
             Type.gentyp () )in
         unify (g env e) (Type.Fun(List.map (g env) es, t));
@@ -170,9 +171,7 @@ let rec g env e = (* 型推論(caml2html: typing_g) *)
 let f e =
   extenv := M.empty;
 
-  (* (match deref_typ (g M.empty e) with
-  | Type.Unit -> ()
-  | _ -> Format.eprintf "warning: final result does not have type unit@."); *)
+
 
   (try unify Type.Unit (g M.empty e)
   with Unify _ -> ());

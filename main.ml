@@ -35,17 +35,15 @@ let lexbuf outchan l = (* �Хåե��򥳥�ѥ��뤷�ƥ����ͥ�
    let s5 = (iter !limit  s4) in
    Debug.out_knormal debug_outchan s5;
    Printf.fprintf debug_outchan "\nafter closure\n\n"; (* クロージャー変換後 *)
-   let s6 = Closure.f s5 in
+   let s6 = (Closure.f s5) in
    Debug.out_closure debug_outchan s6;
-   (* let s6 = Tuple_flattening.f s5 in
-   Printf.fprintf debug_outchan "\nafter tuple_flattening\n\n"; 
-   Debug.out_closure debug_outchan s6; *)
   Emit.f outchan
+    (Delete_load.f
     (RegAlloc.f
       (iter2 !limit2
        (Simm.f
           (Virtual.f
-            s6))))
+            s6)))))
 
 let string s = lexbuf stdout (Lexing.from_string s) (* 文字列をコンパイルして標準出力に表示する (caml2html: main_string) *)
 
